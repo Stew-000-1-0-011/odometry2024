@@ -11,7 +11,9 @@ find_package(ament_cmake REQUIRED)
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
 find_package(rclcpp REQUIRED) ##Stew
-find_package(std_msgs REQUIRED) ##Stew
+find_package(tf2 REQUIRED) ##Stew
+find_package(tf2_ros REQUIRED) ##Stew
+find_package(can_plugins2 REQUIRED) ##Stew
 
 ##Stew
 include_directories(
@@ -24,7 +26,9 @@ add_executable(odom_node
 )
 ament_target_dependencies(odom_node
   rclcpp
-  std_msgs
+  tf2
+  tf2_ros
+  can_plugins2
 )
 
 ##Stew

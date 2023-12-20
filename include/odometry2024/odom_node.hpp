@@ -2,32 +2,46 @@
 
 #include <concepts>
 #include <rclcpp/rclcpp.hpp>
-#include <std_msgs/msg/string.hpp>
+#include <can_plugins2/msg/frame.hpp>
+#include <tf2/LinearMath/Transform.h>
+#include <tf2_ros/transform_broadcaster.h>
 
 namespace odometry2024::won::odom_node::impl {
-    using std_msgs::msg::String;
+    using namespace std::chrono_literals;
 
     struct OdomNode : rclcpp::Node {
-        rclcpp::Publisher<String>::SharedPtr pub;
-        rclcpp::Subscription<String>::SharedPtr sub;
+        tf2_ros::TransformBroadcaster tf_broadcaster;
+        // オドメトリの値を蓄積するデータメンバをここに追加
+
+        rclcpp::Subscription<can_plugins2::msg::Frame>::SharedPtr sub;
+        rclcpp::TimerBase::SharedPtr timer;
 
         OdomNode()
-        : rclcpp::Node("odom_node"),
-        pub{this->create_publisher<String>("greet", 10)},
-        //1でトピック名、2で品質レベル、第3引数でコールバック関数
-        sub{this->create_subscription<String> (
-            "your_name",
-            10, 
-            [this](String::ConstSharedPtr msg) -> void {
-                String new_msg{};
-                new_msg.data = "Hello, " + msg->data + "!";
-                RCLCPP_INFO_STREAM(this->get_logger(), new_msg.data);
-                this->pub->publish(new_msg);
-            }
-        )}
+            : rclcpp::Node("odom_node")
+            , tf_broadcaster(*this)
+            , sub(this->create_subscription<can_plugins2::msg::Frame>(
+                "can_rx",
+                10,
+                [this](const can_plugins2::msg::Frame::SharedPtr msg) {
+                    this->can_rx_callback(msg);
+                }
+            ))
+            , timer(this->create_wall_timer(
+                1ms,
+                [this]() {
+                    this->timer_callback();
+                }
+            ))
         {}
-    };
 
+        void can_rx_callback(const can_plugins2::msg::Frame::SharedPtr msg) {
+            // オドメトリの値を蓄積する処理をここに追加
+        }
+
+        void timer_callback() {
+            // 蓄積したオドメトリの値をtf_broadcasterから送信し、オドメトリの値をリセット
+        }
+    };
 }
 
 namespace odometry2024::won::odom_node {

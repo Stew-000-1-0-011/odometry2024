@@ -216,6 +216,7 @@ namespace odometry2024::won::odom_node::impl {
             }
             this->world_coordinate = get_world_coordinate(this->world_coordinate, this->rpy, raw_count_encoder1, raw_count_encoder2);
             this->quaternion = convert_euler_to_quaternion(get_euler_angles(gyro_xyz, acc_xyz, this->rpy, this->gyro_rpy));
+            RCLCPP_INFO_STREAM(this->get_logger(),  gyro_xyz.x << gyro_xyz.y << gyro_xyz.z << raw_count_encoder1 << "\n" << acc_xyz.x << acc_xyz.x << acc_xyz.z << raw_count_encoder2 << "\n\n");
         }
 
         void timer_callback() {
@@ -224,7 +225,7 @@ namespace odometry2024::won::odom_node::impl {
 
           t.header.stamp = this->get_clock()->now();
           t.header.frame_id = "world";
-          t.child_frame_id =
+        //   t.child_frame_id =
 
           t.transform.translation.x = this->world_coordinate.x;
           t.transform.translation.y = this->world_coordinate.y;
@@ -239,7 +240,6 @@ namespace odometry2024::won::odom_node::impl {
         }
     };
 }
-
 namespace odometry2024::won::odom_node {
     using impl::OdomNode;
 }

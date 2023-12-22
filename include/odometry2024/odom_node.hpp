@@ -187,10 +187,10 @@ namespace odometry2024::won::odom_node::impl {
 
         Quaternion convert_euler_to_quaternion(Rpy rpy){
           Quaternion quaternion;
-          quaternion.x = std::cos(rpy.roll / 2) * std::cos(rpy.pitch / 2) * std::cos(rpy.yaw / 2) - std::sin(rpy.roll / 2) * std::sin(rpy.pitch / 2) * std::sin(rpy.yaw / 2);
-          quaternion.y = std::sin(rpy.roll / 2) * std::cos(rpy.pitch / 2) * std::cos(rpy.yaw / 2) + std::cos(rpy.roll / 2) * std::sin(rpy.pitch / 2) * std::sin(rpy.yaw / 2);
-          quaternion.z = std::cos(rpy.roll / 2) * std::sin(rpy.pitch / 2) * std::cos(rpy.yaw / 2) - std::sin(rpy.roll / 2) * std::cos(rpy.pitch / 2) * std::sin(rpy.yaw / 2);
-          quaternion.w = std::cos(rpy.roll / 2) * std::cos(rpy.pitch / 2) * std::sin(rpy.yaw / 2) + std::sin(rpy.roll / 2) * std::sin(rpy.pitch / 2) * std::cos(rpy.yaw / 2);
+          quaternion.x = std::sin(rpy.roll / 2) * std::cos(rpy.pitch / 2) * std::cos(rpy.yaw / 2) + std::cos(rpy.roll / 2) * std::sin(rpy.pitch / 2) * std::sin(rpy.yaw / 2);
+          quaternion.y = std::cos(rpy.roll / 2) * std::sin(rpy.pitch / 2) * std::cos(rpy.yaw / 2) - std::sin(rpy.roll / 2) * std::cos(rpy.pitch / 2) * std::sin(rpy.yaw / 2);
+          quaternion.z = std::cos(rpy.roll / 2) * std::cos(rpy.pitch / 2) * std::sin(rpy.yaw / 2) + std::sin(rpy.roll / 2) * std::sin(rpy.pitch / 2) * std::cos(rpy.yaw / 2);
+          quaternion.w = std::cos(rpy.roll / 2) * std::cos(rpy.pitch / 2) * std::cos(rpy.yaw / 2) - std::sin(rpy.roll / 2) * std::sin(rpy.pitch / 2) * std::sin(rpy.yaw / 2);
 
           return quaternion;
         }

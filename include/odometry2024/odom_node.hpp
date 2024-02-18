@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <bit>
+#include <random>
 #include <rclcpp/rclcpp.hpp>
 #include <can_plugins2/msg/frame.hpp>
 #include <tf2/LinearMath/Transform.h>
@@ -60,6 +61,10 @@ namespace odometry2024::won::odom_node::impl
         Rpy rpy{};
         Xyz coordinate{};
         LatestData latest_data{};
+
+        std::default_random_engine eng{std::random_device{}()};
+        std::normal_distribution<double> dist_xy{0.0, 0.05};
+        std::normal_distribution<double> dist_th{0.0, 0.02};
 
         rclcpp::Subscription<can_plugins2::msg::Frame>::SharedPtr sub;
         rclcpp::TimerBase::SharedPtr timer;
@@ -258,7 +263,6 @@ namespace odometry2024::won::odom_node::impl
             // 値の計算
             const auto rpy = get_euler_angles(this->latest_data.gyro, this->latest_data.acc, this->rpy);
             const auto coordinate = update_coordinate(this->coordinate, rpy, this->latest_data.encoder_x, this->latest_data.encoder_y);
-            const auto quaternion = convert_euler_to_quaternion(rpy);
 
             // グローバル座標・姿勢の更新
             this->rpy = rpy;
@@ -271,10 +275,17 @@ namespace odometry2024::won::odom_node::impl
             t.header.frame_id = "odom";
             t.child_frame_id = "base_link";
 
-            t.transform.translation.x = coordinate.x;
-            t.transform.translation.y = coordinate.y;
-            t.transform.translation.z = coordinate.z;
+            t.transform.translation.x = coordinate.x + dist_xy(eng);
+            t.transform.translation.y = coordinate.y + dist_xy(eng);
+            t.transform.translation.z = 0;
 
+            const auto quaternion = convert_euler_to_quaternion (
+                Rpy {
+                    0
+                    , 0
+                    , rpy.yaw + dist_th(eng)
+                }
+            );
             t.transform.rotation.x = quaternion.x;
             t.transform.rotation.y = quaternion.y;
             t.transform.rotation.z = quaternion.z;

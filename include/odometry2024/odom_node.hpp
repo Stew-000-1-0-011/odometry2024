@@ -118,7 +118,7 @@ namespace odometry2024::won::odom_node::impl
 
         static Rpy get_euler_angles(Xyz gyro, Xyz acc, Rpy rpy)
         {
-            constexpr double k = 0.0;
+            constexpr double k = 0.04;
             
             // 微小時間あたりのオイラー角を計算
             Rpy micro_rpy{};
@@ -250,10 +250,10 @@ namespace odometry2024::won::odom_node::impl
         static Quaternion convert_euler_to_quaternion(Rpy rpy)
         {
             Quaternion quaternion{};
-            quaternion.x = std::sin(rpy.roll) * std::cos(rpy.pitch) * std::cos(rpy.yaw) - std::cos(rpy.roll) * std::sin(rpy.pitch) * std::sin(rpy.yaw);
-            quaternion.y = std::sin(rpy.roll) * std::cos(rpy.pitch) * std::sin(rpy.yaw) + std::cos(rpy.roll) * std::sin(rpy.pitch) * std::cos(rpy.yaw);
-            quaternion.z = -std::sin(rpy.roll) * std::sin(rpy.pitch) * std::cos(rpy.yaw) + std::cos(rpy.roll) * std::cos(rpy.pitch) * std::sin(rpy.yaw);
-            quaternion.w = std::sin(rpy.roll) * std::sin(rpy.pitch) * std::sin(rpy.yaw) + std::cos(rpy.roll) * std::cos(rpy.pitch) * std::cos(rpy.yaw);
+            quaternion.x = std::sin(rpy.roll / 2) * std::cos(rpy.pitch / 2) * std::cos(rpy.yaw / 2) - std::cos(rpy.roll / 2) * std::sin(rpy.pitch / 2) * std::sin(rpy.yaw / 2);
+            quaternion.y = std::sin(rpy.roll / 2) * std::cos(rpy.pitch / 2) * std::sin(rpy.yaw / 2) + std::cos(rpy.roll / 2) * std::sin(rpy.pitch / 2) * std::cos(rpy.yaw / 2);
+            quaternion.z = -std::sin(rpy.roll / 2) * std::sin(rpy.pitch / 2) * std::cos(rpy.yaw / 2) + std::cos(rpy.roll / 2) * std::cos(rpy.pitch / 2) * std::sin(rpy.yaw / 2);
+            quaternion.w = std::sin(rpy.roll / 2) * std::sin(rpy.pitch / 2) * std::sin(rpy.yaw / 2) + std::cos(rpy.roll / 2) * std::cos(rpy.pitch / 2) * std::cos(rpy.yaw / 2);
 
             return quaternion;
         }

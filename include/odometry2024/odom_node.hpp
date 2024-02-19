@@ -113,7 +113,7 @@ namespace odometry2024::won::odom_node::impl
 
         static Rpy get_euler_angles(Xyz gyro, Xyz acc, Rpy rpy)
         {
-            constexpr double k = 0.0;
+            constexpr double k = 0.04;
             
             // 微小時間あたりのオイラー角を計算
             Rpy micro_rpy{};

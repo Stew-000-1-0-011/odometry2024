@@ -156,10 +156,8 @@ namespace odometry2024::won::odom_node::impl
         {
             Xyz local_speed{};
             double circumference = 3.0;
-            double local_alpha = 0.5 * std::numbers::pi;
-            double local_beta = std::numbers::pi;
-            local_speed.x = std::cos(local_alpha + std::numbers::pi / 2) * raw_count_encoder1 / 2048 * circumference + std::cos(local_beta + std::numbers::pi / 2) * raw_count_encoder2 / 2048 * circumference;
-            local_speed.y = std::sin(local_alpha + std::numbers::pi / 2) * raw_count_encoder1 / 2048 * circumference + std::sin(local_beta + std::numbers::pi / 2) * raw_count_encoder2 / 2048 * circumference;
+            local_speed.x = raw_count_encoder1 / 2048 * circumference;
+            local_speed.y = raw_count_encoder2 / 2048 * circumference;
 
             return local_speed;
         }

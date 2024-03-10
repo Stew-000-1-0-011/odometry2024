@@ -273,15 +273,18 @@ namespace odometry2024::won::odom_node::impl
             t.header.frame_id = "odom";
             t.child_frame_id = "base_link";
 
-            t.transform.translation.x = coordinate.x + dist_xy(eng);
-            t.transform.translation.y = coordinate.y + dist_xy(eng);
+            // t.transform.translation.x = coordinate.x + dist_xy(eng);
+            // t.transform.translation.y = coordinate.y + dist_xy(eng);
+            t.transform.translation.x = coordinate.x;
+            t.transform.translation.y = coordinate.y;
             t.transform.translation.z = 0;
 
             const auto quaternion = convert_euler_to_quaternion (
                 Rpy {
                     0
                     , 0
-                    , rpy.yaw + dist_th(eng)
+                    // , rpy.yaw + dist_th(eng)
+                    , rpy.yaw
                 }
             );
             t.transform.rotation.x = quaternion.x;

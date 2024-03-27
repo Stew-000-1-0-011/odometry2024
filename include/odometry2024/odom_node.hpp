@@ -156,8 +156,8 @@ namespace odometry2024::won::odom_node::impl
         {
             Xyz local_speed{};
             double circumference = 3.0;
-            local_speed.x = raw_count_encoder1 / 2048 * circumference;
-            local_speed.y = raw_count_encoder2 / 2048 * circumference;
+            local_speed.x = double(raw_count_encoder1) / 2048 * circumference;
+            local_speed.y = double(raw_count_encoder2) / 2048 * circumference;
 
             return local_speed;
         }
@@ -231,6 +231,8 @@ namespace odometry2024::won::odom_node::impl
 
             // 機体座標系での速度を求める
             Xyz local_speed = get_local_speed(encoder_x, encoder_y);
+            std::cout << "enc: " << encoder_x << " " << encoder_y << std::endl;
+            std::cout << "local: " << local_speed.x << " " << local_speed.y << std::endl;
 
             // ワールド座標系での機体速度を求める
             auto world_speed = Xyz {
@@ -278,6 +280,8 @@ namespace odometry2024::won::odom_node::impl
             t.transform.translation.x = coordinate.x;
             t.transform.translation.y = coordinate.y;
             t.transform.translation.z = 0;
+
+            std::cout << t.transform.translation.x << " " << t.transform.translation.y << std::endl;
 
             const auto quaternion = convert_euler_to_quaternion (
                 Rpy {

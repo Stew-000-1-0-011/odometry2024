@@ -32,8 +32,19 @@ ament_target_dependencies(odom_node
 )
 
 ##Stew
+add_executable(test_node
+  src/test_node.cpp
+)
+ament_target_dependencies(test_node
+  rclcpp
+  tf2
+  tf2_ros
+  can_plugins2
+)
+
+##Stew
 install(
-  TARGETS odom_node
+  TARGETS odom_node test_node
   DESTINATION lib/${PROJECT_NAME}
 )
 

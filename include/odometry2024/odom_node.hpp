@@ -3,6 +3,8 @@
 #include <cmath>
 #include <bit>
 #include <random>
+#include <numbers>
+
 #include <rclcpp/rclcpp.hpp>
 #include <can_plugins2/msg/frame.hpp>
 #include <tf2/LinearMath/Transform.h>
@@ -47,8 +49,8 @@ namespace odometry2024::won::odom_node::impl
     {
         Xyz gyro{};
         Xyz acc{};
-        int16_t encoder_x{};
-        int16_t encoder_y{};
+        uint16_t encoder_x{};
+        uint16_t encoder_y{};
     };
 
     struct OdomNode : rclcpp::Node
@@ -155,9 +157,9 @@ namespace odometry2024::won::odom_node::impl
         static Xyz get_local_speed(int16_t raw_count_encoder1, int16_t raw_count_encoder2)
         {
             Xyz local_speed{};
-            double circumference = 3.0;
-            local_speed.x = double(raw_count_encoder1) / 2048 * circumference;
-            local_speed.y = double(raw_count_encoder2) / 2048 * circumference;
+            constexpr double circumference = 0.04 * std::numbers::pi;
+            local_speed.x = double(raw_count_encoder1) / 8192 * circumference;
+            local_speed.y = -double(raw_count_encoder2) / 8192 * circumference;
 
             return local_speed;
         }
@@ -241,8 +243,8 @@ namespace odometry2024::won::odom_node::impl
             };
 
             // ワールド座標系での機体座標に微小時間での移動量を足しこむ
-            coordinate.x += world_speed.x * processing_time;
-            coordinate.y += world_speed.y * processing_time;
+            coordinate.x += world_speed.x;
+            coordinate.y += world_speed.y;
 
             return coordinate;
         }
@@ -275,10 +277,10 @@ namespace odometry2024::won::odom_node::impl
             t.header.frame_id = "odom";
             t.child_frame_id = "base_link";
 
-            // t.transform.translation.x = coordinate.x + dist_xy(eng);
-            // t.transform.translation.y = coordinate.y + dist_xy(eng);
-            t.transform.translation.x = coordinate.x;
-            t.transform.translation.y = coordinate.y;
+            t.transform.translation.x = coordinate.x + dist_xy(eng);
+            t.transform.translation.y = coordinate.y + dist_xy(eng);
+            // t.transform.translation.x = coordinate.x;
+            // t.transform.translation.y = coordinate.y;
             t.transform.translation.z = 0;
 
             std::cout << t.transform.translation.x << " " << t.transform.translation.y << std::endl;
@@ -287,8 +289,8 @@ namespace odometry2024::won::odom_node::impl
                 Rpy {
                     0
                     , 0
-                    // , rpy.yaw + dist_th(eng)
-                    , rpy.yaw
+                    , rpy.yaw + dist_th(eng)
+                    // , rpy.yaw
                 }
             );
             t.transform.rotation.x = quaternion.x;

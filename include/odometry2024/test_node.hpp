@@ -45,7 +45,7 @@ namespace odometry2024::stew::test_node::impl {
         , tim(this->create_wall_timer(1ms, [this]{
             this->x += this->current_x;
             this->y += this->current_y;
-            RCLCPP_INFO_STREAM(this->get_logger(), this->x << " " << this->y);
+            RCLCPP_INFO_STREAM(this->get_logger(), this->x / 8192.0 << " " << this->y / 8912.0);
         }))
         {}
     };

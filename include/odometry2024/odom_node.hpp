@@ -10,9 +10,12 @@
 #include <tf2/LinearMath/Transform.h>
 #include <tf2_ros/transform_broadcaster.h>
 
+#include "geometry_msgs_convertor.hpp"
+
 namespace odometry2024::won::odom_node::impl
 {
     using namespace std::chrono_literals;
+    namespace gmc = nhk24_2nd_ws::r2::geometry_msgs_convertor;
     using std::int16_t;
 
     struct Rpy
@@ -271,34 +274,49 @@ namespace odometry2024::won::odom_node::impl
             this->coordinate = coordinate;
 
             // 蓄積したオドメトリの値をtf_broadcasterから送信
-            geometry_msgs::msg::TransformStamped t{};
+            const auto nx = dist_xy(eng);
+            const auto ny = dist_xy(eng);
+            const auto nth = dist_th(eng);
+            const auto stamp = this->get_clock()->now();
 
-            t.header.stamp = this->get_clock()->now();
-            t.header.frame_id = "odom";
-            t.child_frame_id = "base_link";
+            constexpr auto make_transform = [] (
+                auto&& stamp
+                , auto&& frame_id
+                , auto&& child_frame_id
+                , const double x
+                , const double y
+                , const double th
+                , const bool inv = false
+            ) -> geometry_msgs::msg::TransformStamped {
+                geometry_msgs::msg::TransformStamped t{};
+                t.header.stamp = stamp;
+                t.header.frame_id = frame_id;
+                t.child_frame_id = child_frame_id;
 
-            t.transform.translation.x = coordinate.x + dist_xy(eng);
-            t.transform.translation.y = coordinate.y + dist_xy(eng);
-            // t.transform.translation.x = coordinate.x;
-            // t.transform.translation.y = coordinate.y;
-            t.transform.translation.z = 0;
+                t.transform.translation.x = x;
+                t.transform.translation.y = y;
+                t.transform.translation.z = 0;
 
-            std::cout << t.transform.translation.x << " " << t.transform.translation.y << std::endl;
+                const auto quaternion = convert_euler_to_quaternion (
+                    Rpy {
+                        0
+                        , 0
+                        , th
+                    }
+                );
+                t.transform.rotation.x = quaternion.x;
+                t.transform.rotation.y = quaternion.y;
+                t.transform.rotation.z = quaternion.z;
+                t.transform.rotation.w = quaternion.w;
 
-            const auto quaternion = convert_euler_to_quaternion (
-                Rpy {
-                    0
-                    , 0
-                    , rpy.yaw + dist_th(eng)
-                    // , rpy.yaw
-                }
-            );
-            t.transform.rotation.x = quaternion.x;
-            t.transform.rotation.y = quaternion.y;
-            t.transform.rotation.z = quaternion.z;
-            t.transform.rotation.w = quaternion.w;
+                using Conv = gmc::MsgConvertor<tf2::Transform, geometry_msgs::msg::Transform>;
+                if(inv) t.transform = Conv::toMsg(Conv::fromMsg(t.transform).inverse());
 
-            this->tf_broadcaster.sendTransform(t);
+                return t;
+            };
+
+            this->tf_broadcaster.sendTransform(make_transform(stamp, "odom", "base_link", coordinate.x + nx, coordinate.y + ny, rpy.yaw + nth));
+            // this->tf_broadcaster.sendTransform(make_transform(stamp, "base_link", "true_base_link", nx, ny, nth, true));
         }
     };
 }

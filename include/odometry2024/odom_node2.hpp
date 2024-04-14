@@ -22,7 +22,7 @@ namespace odometry2024::won::odom_node::impl
     {
         tf2_ros::TransformBroadcaster tf_broadcaster;
         // オドメトリの値を蓄積するデータメンバをここに追加
-        float rpy{};
+        float yaw{};
         Xy coordinate{};
 
         rclcpp::Subscription<can_plugins2::msg::Frame>::SharedPtr sub;
@@ -46,7 +46,11 @@ namespace odometry2024::won::odom_node::impl
 
                     case 0x556:
                     {
-                        this->rpy = std::bit_cast<float>(msg->data);
+                        this->yaw = [data = msg->data]{
+                            float dst;
+                            std::memcpy(&dst, data.data(), sizeof(float));
+                            return dst;
+                        }();
                     }
                     break;
                     

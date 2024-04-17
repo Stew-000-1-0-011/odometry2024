@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <bit>
+#include <random>
 #include <rclcpp/rclcpp.hpp>
 #include <can_plugins2/msg/frame.hpp>
 #include <tf2/LinearMath/Transform.h>
@@ -24,6 +25,9 @@ namespace odometry2024::won::odom_node::impl
         // オドメトリの値を蓄積するデータメンバをここに追加
         float yaw{};
         Xy coordinate{};
+        std::default_random_engine eng{std::random_device{}()};
+        std::normal_distribution<double> dist_xy{0.0, 0.05};
+        std::normal_distribution<double> dist_th{0.0, 0.02};
 
         rclcpp::Subscription<can_plugins2::msg::Frame>::SharedPtr sub;
         rclcpp::TimerBase::SharedPtr timer;
@@ -72,20 +76,42 @@ namespace odometry2024::won::odom_node::impl
             // 蓄積したオドメトリの値をtf_broadcasterから送信
             geometry_msgs::msg::TransformStamped t{};
 
-            t.header.stamp = this->get_clock()->now();
-            t.header.frame_id = "odom";
-            t.child_frame_id = "base_link";
+            const auto stamp = this->get_clock()->now();
+            const auto [x, y, th] = std::make_tuple(this->coordinate.x, this->coordinate.y, this->yaw);
+            const auto [ex, ey, eth] = std::make_tuple(this->dist_xy(this->eng), this->dist_xy(this->eng), this->dist_th(this->eng));
 
-            t.transform.translation.x = this->coordinate.x;
-            t.transform.translation.y = this->coordinate.y;
+            this->tf_broadcaster.sendTransform(make_transform (
+                "odom", "base_link"
+                , stamp
+                , x + ex
+                , y + ey
+                , th + eth
+            ));
+
+            this->tf_broadcaster.sendTransform(make_transform (
+                "base_link", "true_base_link"
+                , stamp
+                , -ex
+                , -ey
+                , -eth
+            ));
+        }
+
+        static auto make_transform(const std::string_view frame_id, const std::string_view child_frame_id, builtin_interfaces::msg::Time stamp, double x, const double y, const double th) -> geometry_msgs::msg::TransformStamped {
+            geometry_msgs::msg::TransformStamped t{};
+            
+            t.header.stamp = stamp;
+            t.header.frame_id = frame_id;
+            t.child_frame_id = child_frame_id;
+            t.transform.translation.x = x;
+            t.transform.translation.y = y;
             t.transform.translation.z = 0.0;
-
             t.transform.rotation.x = 0.0;
             t.transform.rotation.y = 0.0;
-            t.transform.rotation.z = std::sin(this->yaw);
-            t.transform.rotation.w = std::cos(this->yaw);
+            t.transform.rotation.z = std::sin(th);
+            t.transform.rotation.w = std::cos(th);
 
-            this->tf_broadcaster.sendTransform(t);
+            return t;
         }
     };
 }

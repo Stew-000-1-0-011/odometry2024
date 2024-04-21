@@ -3,6 +3,7 @@
 #include <cmath>
 #include <bit>
 #include <random>
+#include <algorithm>
 #include <rclcpp/rclcpp.hpp>
 #include <can_plugins2/msg/frame.hpp>
 #include <tf2/LinearMath/Transform.h>
@@ -13,10 +14,35 @@ namespace odometry2024::won::odom_node::impl
     using namespace std::chrono_literals;
     using std::int16_t;
 
+    constexpr double xy_stddev = 0.05;
+    constexpr double th_stddev = 0.02;
+    constexpr double xy_error_max = 0.08;
+    constexpr double th_error_max = 0.03;
+
     struct Xy
     {
         float x = 0;
         float y = 0;
+    };
+
+    struct ClampedRandomGenerator final {
+        std::default_random_engine eng;
+        std::normal_distribution<double> dist;
+        double abs_max;
+
+        static auto make(const double stddev, const double abs_max) -> ClampedRandomGenerator {
+            return ClampedRandomGenerator {
+                std::default_random_engine {
+                    std::random_device{}()
+                }
+                , std::normal_distribution<double>{0.0, stddev}
+                , abs_max
+            };
+        }
+
+        auto operator()() -> double {
+            return std::clamp(this->dist(this->eng), -this->abs_max, this->abs_max);
+        }
     };
 
     struct OdomNode : rclcpp::Node
@@ -26,8 +52,8 @@ namespace odometry2024::won::odom_node::impl
         float yaw{};
         Xy coordinate{};
         std::default_random_engine eng{std::random_device{}()};
-        std::normal_distribution<double> dist_xy{0.0, 0.05};
-        std::normal_distribution<double> dist_th{0.0, 0.02};
+        ClampedRandomGenerator crg_xy = ClampedRandomGenerator::make(xy_stddev, xy_error_max);
+        ClampedRandomGenerator crg_th = ClampedRandomGenerator::make(th_stddev, th_error_max);
 
         rclcpp::Subscription<can_plugins2::msg::Frame>::SharedPtr sub;
         rclcpp::TimerBase::SharedPtr timer;
@@ -78,7 +104,7 @@ namespace odometry2024::won::odom_node::impl
 
             const auto stamp = this->get_clock()->now();
             const auto [x, y, th] = std::make_tuple(this->coordinate.x, this->coordinate.y, this->yaw);
-            const auto [ex, ey, eth] = std::make_tuple(this->dist_xy(this->eng), this->dist_xy(this->eng), this->dist_th(this->eng));
+            const auto [ex, ey, eth] = std::make_tuple(this->crg_xy(), this->crg_xy(), this->crg_th());
 
             this->tf_broadcaster.sendTransform(make_transform (
                 "odom", "base_link"
